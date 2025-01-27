@@ -25,7 +25,7 @@ def analyze_emotion_from_image(image_path):
             emotions = [{"dominant_emotion": face.get('dominant_emotion', 'N/A')} for face in analysis]
         else:  # Single face detected
             emotions = {"dominant_emotion": analysis.get('dominant_emotion', 'N/A')}
-
+        print(analysis)
         return emotions[0]
 
     except Exception as e:

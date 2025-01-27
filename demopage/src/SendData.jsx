@@ -3,6 +3,7 @@ import axios from 'axios';
 
 const WebcamCapture = () => {
   const [responseMessage, setResponseMessage] = useState('');
+  const [emotion, setEmotion] = useState('no-emotions');
   const [capturedImage, setCapturedImage] = useState(null); // State to store captured image URL
   const [isCapturing, setIsCapturing] = useState(false); // Track if the webcam is actively capturing
   const canvasRef = useRef(null);
@@ -34,6 +35,7 @@ const WebcamCapture = () => {
       clearInterval(intervalRef.current); // Stop capturing
     }
     setIsCapturing(false); // Update state to indicate capturing is stopped
+    setCapturedImage(null); // Clear captured image when stopping
     console.log('Webcam stopped and capturing process killed');
   };
 
@@ -50,6 +52,12 @@ const WebcamCapture = () => {
       imageCapture
         .grabFrame()
         .then((imageBitmap) => {
+          // Dynamically adjust the canvas size to match the video resolution
+          const width = imageBitmap.width;
+          const height = imageBitmap.height;
+          canvas.width = width;
+          canvas.height = height;
+
           // Draw the image frame onto the canvas
           context.drawImage(imageBitmap, 0, 0, canvas.width, canvas.height);
 
@@ -61,11 +69,12 @@ const WebcamCapture = () => {
 
           // Send the base64 image to the Flask backend
           axios
-            .post('http://localhost:5000/upload-image', {
+            .post('https://8d85-103-92-43-226.ngrok-free.app/upload-image', {
               image: imageData.split(',')[1], // remove 'data:image/png;base64,' prefix
             })
             .then((response) => {
               setResponseMessage(response.data.message);
+              setEmotion(response.data.result)
             })
             .catch((error) => {
               setResponseMessage("Error uploading image");
@@ -83,7 +92,7 @@ const WebcamCapture = () => {
   const startCapturing = () => {
     if (!isCapturing) {
       startWebcam();
-      intervalRef.current = setInterval(captureAndSendImage, 10000); // Capture every 5 seconds
+      intervalRef.current = setInterval(captureAndSendImage, 2000); // Capture every 2 seconds
       setIsCapturing(true); // Update state to indicate capturing is active
       console.log('Capturing started');
     }
@@ -119,6 +128,9 @@ const WebcamCapture = () => {
       <button onClick={stopCapturing}>Stop Capturing</button>
 
       <p>{responseMessage}</p>
+      <h3>
+        current-emotion: {emotion}
+      </h3>     
 
       {/* Logging webcam state */}
       <div>
