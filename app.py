@@ -1,13 +1,11 @@
 from flask import Flask, request, jsonify, redirect
 from flask_cors import CORS
-from werkzeug.utils import secure_filename
 import os
 import base64
 from io import BytesIO
 from PIL import Image
 import time
 import ana
-import json
 
 app = Flask(__name__)
 CORS(app)
@@ -27,7 +25,7 @@ def home():
 @app.route('/upload-image', methods=['GET', 'POST'])
 def upload_image():
     if request.method == 'GET':
-        # If you need to return any info when GET is called, you can modify it here
+        
         return jsonify({"message": "Send a POST request to upload an image."}), 200
     
     if request.method == 'POST':
@@ -40,8 +38,7 @@ def upload_image():
         path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         result = ana.analyze_emotion_from_image(path)
         
-        # Optionally, you can delete the image after processing it (uncomment line below if needed)
-        # os.remove(path)
+        os.remove(path)
         
         # Return the result
         print(result)
