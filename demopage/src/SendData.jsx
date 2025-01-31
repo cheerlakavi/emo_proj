@@ -65,7 +65,7 @@ const EmotionAnalysisTool = () => {
           setCapturedImage(imageData);
 
           axios
-            .post('https://a1f2-103-92-43-226.ngrok-free.app/upload-image', {
+            .post('http://localhost:5000/upload-image', {
               image: imageData.split(',')[1],
             })
             .then((response) => {

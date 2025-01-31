@@ -9,7 +9,7 @@ COPY demopage/package.json demopage/package-lock.json ./
 COPY demopage/ ./
 
 # Install dependencies and build the frontend
-RUN npm install && npm run build
+RUN npm install && npm run dev
 
 # Stage 2: Build Flask Backend
 FROM python:3.10-slim AS backend
