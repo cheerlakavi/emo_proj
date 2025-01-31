@@ -1,33 +1,32 @@
 # Stage 1: Build React Frontend
 FROM node:18 AS frontend-builder
 
-# Set working directory for React frontend
 WORKDIR /app/demopage
 
-# Copy React frontend code
+# Copy dependencies first (for caching)
 COPY demopage/package.json demopage/package-lock.json ./
+RUN npm install --legacy-peer-deps
+
+# Copy the rest of the frontend files
 COPY demopage/ ./
 
-# Install dependencies and build the frontend
-RUN npm install && npm run dev
+# Build the frontend
+RUN npm run build
 
 # Stage 2: Build Flask Backend
 FROM python:3.10-slim AS backend
 
+WORKDIR /app
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y libgl1-mesa-glx && apt-get clean
 
-# Set working directory for Flask backend
-WORKDIR /app
-
 # Copy backend files
 COPY app.py ana.py requirements.txt ./
+COPY uploads /app/uploads
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy uploads directory (if any)
-COPY uploads /app/uploads
 
 # Expose Flask API port
 EXPOSE 5000
@@ -35,40 +34,35 @@ EXPOSE 5000
 # Stage 3: Serve React with Nginx
 FROM nginx:alpine AS frontend-server
 
-# Copy the build from the frontend-builder stage
-COPY --from=frontend-builder /app/demopage/build /usr/share/nginx/html
+# Copy built React frontend to Nginx
+COPY --from=frontend-builder /app/demopage/dist /usr/share/nginx/html
 
-# Expose port for React frontend
+# Copy custom Nginx config
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Expose React frontend port
 EXPOSE 80
 
 # Stage 4: Final Image (Backend + Frontend + Nginx)
 FROM python:3.10-slim AS final
 
+WORKDIR /app
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y libgl1-mesa-glx && apt-get clean
 
-# Set working directory
-WORKDIR /app
-
-# Copy the Flask backend files
-COPY app.py ana.py requirements.txt ./
+# Copy Flask backend
+COPY --from=backend /app /app
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy uploads directory (if any)
-COPY uploads /app/uploads
-
-# Expose Flask API port
-EXPOSE 5000
-
-# Copy the React build from the frontend-server stage
+# Copy React build from frontend-server stage
 COPY --from=frontend-server /usr/share/nginx/html /app/frontend
 
-# Expose port for React (nginx) and Flask API
-EXPOSE 80
+# Expose Flask API and React frontend ports
 EXPOSE 5000
+EXPOSE 80
 
-# Run Flask app in the background
+# Start Flask backend
 CMD ["python", "app.py"]
-
