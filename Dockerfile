@@ -1,68 +1,76 @@
-# Stage 1: Build React Frontend
+# Stage 1: Build Frontend
 FROM node:18 AS frontend-builder
 
+# Set working directory
 WORKDIR /app/demopage
 
-# Copy dependencies first (for caching)
+# Copy package files first (for better caching)
 COPY demopage/package.json demopage/package-lock.json ./
+
+# Install frontend dependencies
 RUN npm install --legacy-peer-deps
 
-# Copy the rest of the frontend files
+# Copy the entire frontend code
 COPY demopage/ ./
 
-# Build the frontend
+# Build React (Vite)
 RUN npm run build
 
-# Stage 2: Build Flask Backend
-FROM python:3.10-slim AS backend
 
-WORKDIR /app
+# Stage 2: Backend (Flask API)
+FROM python:3.10-slim AS backend
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y libgl1-mesa-glx && apt-get clean
 
+# Set working directory
+WORKDIR /app
+
 # Copy backend files
 COPY app.py ana.py requirements.txt ./
-COPY uploads /app/uploads
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy uploads directory (if any)
+COPY uploads /app/uploads
 
 # Expose Flask API port
 EXPOSE 5000
 
+
 # Stage 3: Serve React with Nginx
 FROM nginx:alpine AS frontend-server
 
-# Copy built React frontend to Nginx
+# Copy built frontend files from frontend-builder stage
 COPY --from=frontend-builder /app/demopage/dist /usr/share/nginx/html
 
-# Copy custom Nginx config
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Expose React frontend port
+# Expose frontend port
 EXPOSE 80
 
-# Stage 4: Final Image (Backend + Frontend + Nginx)
+
+# Final Stage: Running Flask API + Nginx
 FROM python:3.10-slim AS final
 
+# Install system dependencies
+RUN apt-get update && apt-get install -y libgl1-mesa-glx nginx && apt-get clean
+
+# Set working directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y libgl1-mesa-glx && apt-get clean
-
-# Copy Flask backend
-COPY --from=backend /app /app
-
-# Install Python dependencies
+# Copy Flask backend files
+COPY app.py ana.py requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy React build from frontend-server stage
+# Copy uploads directory (if any)
+COPY uploads /app/uploads
+
+# Copy built frontend files from frontend-server stage
 COPY --from=frontend-server /usr/share/nginx/html /app/frontend
 
-# Expose Flask API and React frontend ports
+# Expose Flask API & Frontend ports
 EXPOSE 5000
 EXPOSE 80
 
-# Start Flask backend
-CMD ["python", "app.py"]
+# Run Flask API and Nginx together
+CMD ["sh", "-c", "service nginx start && python3 app.py"]
