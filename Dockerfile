@@ -17,7 +17,7 @@ FROM python:3.10-slim AS backend
 # Install system dependencies for OpenCV and DeepFace
 RUN apt-get update && apt-get install -y \
     libglib2.0-0 libsm6 libxext6 libxrender-dev \
-    libgthread-2.0-0 ffmpeg && \
+    ffmpeg && \
     apt-get clean
 
 # Set working directory for Flask backend
