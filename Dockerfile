@@ -17,7 +17,7 @@ FROM python:3.10-slim AS backend
 # Install system dependencies for OpenCV and DeepFace
 RUN apt-get update && apt-get install -y \
     libglib2.0-0 libsm6 libxext6 libxrender-dev \
-    ffmpeg && \
+    libgthread-2.0-0 ffmpeg && \
     apt-get clean
 
 # Set working directory for Flask backend
@@ -65,9 +65,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy uploads directory (if any)
 COPY uploads /app/uploads
 
-# Expose Flask API port
-EXPOSE 5000
-
 # Copy the React build from the frontend-server stage
 COPY --from=frontend-server /usr/share/nginx/html /app/frontend
 
@@ -75,5 +72,8 @@ COPY --from=frontend-server /usr/share/nginx/html /app/frontend
 EXPOSE 80
 EXPOSE 5000
 
-# Run Flask app in the background
-CMD ["python", "app.py"]
+# Install gunicorn to serve Flask in production
+RUN pip install gunicorn
+
+# Run Flask app using gunicorn (as a production WSGI server)
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
