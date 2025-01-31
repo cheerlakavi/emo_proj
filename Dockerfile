@@ -14,10 +14,10 @@ RUN npm install && npm run build
 # Stage 2: Build Flask Backend
 FROM python:3.10-slim AS backend
 
-# Install system dependencies for OpenCV and DeepFace
+# Install system dependencies for OpenCV and DeepFace (without libgthread-2.0-0)
 RUN apt-get update && apt-get install -y \
-    libglib2.0-0 libsm6 libxext6 libxrender-dev \
-    libgthread-2.0-0 ffmpeg && \
+    libglib2.0-0 libglib2.0-dev libsm6 libxext6 libxrender-dev \
+    ffmpeg && \
     apt-get clean
 
 # Set working directory for Flask backend
@@ -47,10 +47,10 @@ EXPOSE 80
 # Stage 4: Final Image (Backend + Frontend + Nginx)
 FROM python:3.10-slim AS final
 
-# Install system dependencies for OpenCV and DeepFace
+# Install system dependencies for OpenCV and DeepFace (without libgthread-2.0-0)
 RUN apt-get update && apt-get install -y \
-    libglib2.0-0 libsm6 libxext6 libxrender-dev \
-    libgthread-2.0-0 ffmpeg && \
+    libglib2.0-0 libglib2.0-dev libsm6 libxext6 libxrender-dev \
+    ffmpeg && \
     apt-get clean
 
 # Set working directory
