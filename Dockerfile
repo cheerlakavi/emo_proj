@@ -1,29 +1,26 @@
-# Stage 1: Build Frontend
+# Stage 1: Build React Frontend
 FROM node:18 AS frontend-builder
 
-# Set working directory
+# Set working directory for React frontend
 WORKDIR /app/demopage
 
-# Copy package files first (for better caching)
+# Copy React frontend code
 COPY demopage/package.json demopage/package-lock.json ./
-
-# Install frontend dependencies
-RUN npm install --legacy-peer-deps
-
-# Copy the entire frontend code
 COPY demopage/ ./
 
-# Build React (Vite)
-RUN npm run build
+# Install dependencies and build the frontend
+RUN npm install && npm run build
 
-
-# Stage 2: Backend (Flask API)
+# Stage 2: Build Flask Backend
 FROM python:3.10-slim AS backend
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y libgl1-mesa-glx && apt-get clean
+# Install system dependencies for OpenCV and DeepFace
+RUN apt-get update && apt-get install -y \
+    libglib2.0-0 libsm6 libxext6 libxrender-dev \
+    libgthread-2.0-0 ffmpeg && \
+    apt-get clean
 
-# Set working directory
+# Set working directory for Flask backend
 WORKDIR /app
 
 # Copy backend files
@@ -38,39 +35,45 @@ COPY uploads /app/uploads
 # Expose Flask API port
 EXPOSE 5000
 
-
 # Stage 3: Serve React with Nginx
 FROM nginx:alpine AS frontend-server
 
-# Copy built frontend files from frontend-builder stage
+# Copy the build from the frontend-builder stage
 COPY --from=frontend-builder /app/demopage/dist /usr/share/nginx/html
 
-# Expose frontend port
+# Expose port for React frontend
 EXPOSE 80
 
-
-# Final Stage: Running Flask API + Nginx
+# Stage 4: Final Image (Backend + Frontend + Nginx)
 FROM python:3.10-slim AS final
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y libgl1-mesa-glx nginx && apt-get clean
+# Install system dependencies for OpenCV and DeepFace
+RUN apt-get update && apt-get install -y \
+    libglib2.0-0 libsm6 libxext6 libxrender-dev \
+    libgthread-2.0-0 ffmpeg && \
+    apt-get clean
 
 # Set working directory
 WORKDIR /app
 
-# Copy Flask backend files
+# Copy the Flask backend files
 COPY app.py ana.py requirements.txt ./
+
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy uploads directory (if any)
 COPY uploads /app/uploads
 
-# Copy built frontend files from frontend-server stage
+# Expose Flask API port
+EXPOSE 5000
+
+# Copy the React build from the frontend-server stage
 COPY --from=frontend-server /usr/share/nginx/html /app/frontend
 
-# Expose Flask API & Frontend ports
-EXPOSE 5000
+# Expose port for React (nginx) and Flask API
 EXPOSE 80
+EXPOSE 5000
 
-# Run Flask API and Nginx together
-CMD ["sh", "-c", "service nginx start && python3 app.py"]
+# Run Flask app in the background
+CMD ["python", "app.py"]
