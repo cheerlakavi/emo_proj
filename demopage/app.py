@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, redirect
 from flask_cors import CORS
 import os
 import base64
@@ -7,7 +7,7 @@ from PIL import Image
 import time
 import ana
 
-app = Flask(__name__, static_folder='demopage/dist', static_url_path='/')
+app = Flask(__name__)
 CORS(app)
 
 UPLOAD_FOLDER = 'uploads'
@@ -20,7 +20,7 @@ def save_image_from_base64(base64_data, filename):
 
 @app.route('/', methods=['GET'])
 def home():
-    return send_from_directory(app.static_folder, "index.html")
+    return redirect("/upload-image")
 
 @app.route('/upload-image', methods=['GET', 'POST'])
 def upload_image():

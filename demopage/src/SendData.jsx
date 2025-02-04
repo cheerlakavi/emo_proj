@@ -65,7 +65,7 @@ const EmotionAnalysisTool = () => {
           setCapturedImage(imageData);
 
           axios
-            .post('http://localhost:5000/upload-image', {
+            .post('/upload-image', {
               image: imageData.split(',')[1],
             })
             .then((response) => {
@@ -87,7 +87,7 @@ const EmotionAnalysisTool = () => {
   const startCapturing = () => {
     if (!isCapturing) {
       startWebcam();
-      intervalRef.current = setInterval(captureAndSendImage, 3000);
+      intervalRef.current = setInterval(captureAndSendImage, 1000);
       setIsCapturing(true);
       console.log('Capturing started');
     }

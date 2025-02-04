@@ -16,7 +16,7 @@ def analyze_emotion_from_image(image_path):
         # Analyze the image using DeepFace
         analysis = DeepFace.analyze(
             img_path=image_path,
-            actions=["emotion"],  # Only analyze emotions
+            actions=["emotion"],# Only analyze emotions
             enforce_detection=False
         )
 
