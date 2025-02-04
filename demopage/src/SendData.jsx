@@ -87,7 +87,7 @@ const EmotionAnalysisTool = () => {
   const startCapturing = () => {
     if (!isCapturing) {
       startWebcam();
-      intervalRef.current = setInterval(captureAndSendImage, 1000);
+      intervalRef.current = setInterval(captureAndSendImage, 2000);
       setIsCapturing(true);
       console.log('Capturing started');
     }
