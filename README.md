@@ -82,4 +82,10 @@ This project implements a real-time emotion analysis system using a React fronte
 
 This project successfully implements a real-time emotion analysis system using a React frontend and a Flask backend. By capturing and analyzing webcam images, it demonstrates the potential for interactive applications in mental health, user experience design, and real-time feedback systems. The system's modular design allows for easy enhancements, making it a versatile framework for emotion-based interactive applications.
 
----
+## Deployement
+just download and make a image form the dckerfile provided 
+-> docker build -t <name of image> .
+-> docker run -p 5000:5000 <name>
+!no need to clone the entire repo 
+why docker container to serve the app?
+to avoid system level dependency conflicts
