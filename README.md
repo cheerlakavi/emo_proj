@@ -84,6 +84,9 @@ This project successfully implements a real-time emotion analysis system using a
 
 ## Deployement
 just download and make a image form the dckerfile provided <br>
+->wget https://raw.githubusercontent.com/CBcodes03/emo_proj/master/Dockerfile<br>
+  or<br>
+->curl -O https://raw.githubusercontent.com/CBcodes03/emo_proj/master/Dockerfile
 -> docker build -t imagename . <br>
 -> docker run -p 5000:5000 imagename <br>
 !no need to clone the entire repo 
